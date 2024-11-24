@@ -15,7 +15,8 @@ OpenGL+bullet physics自由落体仿真
 - [x] 集成 Bullet Physics 引擎
 - [x] 支持刚体模拟和碰撞检测
 - [x] 平台动态地面和自由物体交互
-
+- [x] WS键控制物体移动
+- [x] QE键控制物体转向
 ---
 
 ## 安装和运行
