@@ -32,6 +32,7 @@ TriMesh* skybox6 = new TriMesh();
 
 Ground* ground = new Ground(); //地面
 Model* cube = new Model();     //立方体
+Model* cube2 = new Model();
 
 //物理世界
 btDiscreteDynamicsWorld* dynamicsWorld;
@@ -81,9 +82,19 @@ void init()
     cube->setScale(glm::vec3(4, 4, 4));
     cube->create(1.0f, btVector3(0, 0, 0));
     dynamicsWorld->addRigidBody(cube->rigidBody);
-    painter->addMesh(cube, "cube", "./assets/grass.jpg", vshader, fshader, 3, glm::mat4(1.0f));
+    painter->addMesh(cube, "cube", "./assets/grass.jpg", vshader, fshader, 1, glm::mat4(1.0f));
     meshList.push_back(cube);
-
+    cube->set_ground(ground->rigidBody);
+    
+    cube2->generateCube();
+    cube2->setTranslation(glm::vec3(0.0f, 1.0f, 6.0f));
+    cube2->setRotation(glm::vec3(-90, 0, 0.0f));
+    cube2->setScale(glm::vec3(4, 4, 4));
+    cube2->create(0.0f, btVector3(0, 0, 0));
+    dynamicsWorld->addRigidBody(cube2->rigidBody);
+    painter->addMesh(cube2, "cube2", "./assets/cube/wall.jpg", vshader, fshader, 1, glm::mat4(1.0f));
+    meshList.push_back(cube2);
+    
     //天空盒
     skybox1->generateSquare(glm::vec3(0.0, 0.0, 0.0));
 
@@ -169,6 +180,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         case GLFW_KEY_ESCAPE: exit(EXIT_SUCCESS); break;
         default:
             camera->keyboard(key, action, mode);
+            cube->key_callback(dynamicsWorld, key, action, mode);
             break;
         }
     }
@@ -239,7 +251,8 @@ int main(int argc, char** argv)
     {
         dynamicsWorld->stepSimulation(1.f / 60.f, 10);
         cube->update_position();
-        painter->replaceMesh(cube, "cube", "./assets/grass.jpg", vshader, fshader, 3, glm::mat4(1.0f));
+        painter->replaceMesh(cube, "cube", "./assets/grass.jpg", vshader, fshader, 1, glm::mat4(1.0f));
+        //dynamicsWorld->updateSingleAabb(cube->rigidBody);
         display();
         //reshape();
 
