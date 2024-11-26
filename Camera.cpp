@@ -1,4 +1,5 @@
 ﻿#include "Camera.h"
+#include"TriMesh.h"
 
 Camera::Camera() { updateCamera(); };
 Camera::~Camera() {}
@@ -103,11 +104,14 @@ void Camera::updateCamera()
 	float eyez = radius * cos(upAngle * M_PI / 180.0) * cos(rotateAngle * M_PI / 180.0);
 
 	eye = glm::vec4(eyex, eyey, eyez, 1.0);
-	at = glm::vec4(0.0, 1.0, 0.0, 1.0);
+	at = glm::vec4(0.0, 0.0, 0.0, 1.0);
 	up = glm::vec4(0.0, 1.0, 0.0, 0.0);
 
 }
+void Camera::updateCamera(TriMesh* mesh)
+{
 
+}
 
 void Camera::keyboard(int key, int action, int mode)
 {
@@ -149,4 +153,32 @@ void Camera::keyboard(int key, int action, int mode)
 		scale = 1.5;
 		isOrtho = false;
 	}
+}
+
+void Camera::init_eyes(TriMesh* mesh)
+{
+	isfirst = true;
+	radius = 10.0;
+	rotateAngle = 0.0;
+	upAngle = 0.0;
+	//计算坐标
+	glm::mat4 model = glm::mat4(1.0f);
+	glm::vec3 trans = mesh->getTranslation();
+	//model = glm::translate(model, mesh->getTranslation());
+	model = glm::rotate(model, glm::radians(mesh->getRotation()[2]), glm::vec3(0.0, 0.0, 1.0));
+	model = glm::rotate(model, glm::radians(mesh->getRotation()[1]), glm::vec3(0.0, 1.0, 0.0));
+	model = glm::rotate(model, glm::radians(mesh->getRotation()[0]), glm::vec3(1.0, 0.0, 0.0));
+	eye = glm::vec4(trans, 1.0);
+	eye = eye + glm::vec4(0.0,0.4*mesh->getScale().y,0.5*mesh->getScale().z,0.0f);			//固定位置在物体前上表面
+	at = eye + glm::vec4(0.0, 0.0, 10.0, 0.0);
+	eye = eye * model;
+	at = at * model;
+	up = glm::vec4(0.0, 1.0, 0.0, 0.0);
+}
+void Camera::follow_body(TriMesh*mesh,glm::mat4 mat)
+{
+
+	// @TODO: Task1 设置相机位置和方向
+	eye = mat*eye;
+	at = mat*at;
 }

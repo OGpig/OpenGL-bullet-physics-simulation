@@ -165,21 +165,39 @@ void MeshPainter::replaceMesh1(TriMesh* mesh, const std::string& name, const std
         if (mesh_names[i] == name)
             break;
     }
+
     mesh_mats[i] = mat;
     meshes[i] = mesh;
     mesh_types[i] = type;
+    // 获取新的顶点数据
+    std::vector<glm::vec3> points = mesh->getPoints();
 
-    openGLObject object;
-     // 绑定openGL对象，并传递顶点属性的数据
 
-     bindObjectAndData(mesh, object, texture_image, vshader, fshader);
-     opengl_objects[i] = object;
+    // 仅更新顶点数据（points），不修改其他数据
+    glBindBuffer(GL_ARRAY_BUFFER, opengl_objects[i].vbo);  // 绑定现有的 VBO
+
+    // 更新顶点数据（不重新创建 VBO，只更新 points）
+    glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(glm::vec3), points.data());
+
+    // 如果之前已经加载过纹理，先删除旧的纹理对象
+    if (opengl_objects[i].texture != 0) {
+        glDeleteTextures(1, &opengl_objects[i].texture);
+    }
+
+    // 更新纹理图片路径
+    opengl_objects[i].texture_image = texture_image;
+
+    // 创建新的纹理对象
+    glGenTextures(1, &opengl_objects[i].texture);
+
+    // 调用 stb_image 加载纹理
+    load_texture_STBImage(opengl_objects[i].texture_image, opengl_objects[i].texture);
 };
 
 void MeshPainter::drawMesh(TriMesh* mesh, openGLObject& object, Light* light, Camera* camera, int type)
 {
     // 相机矩阵计算
-    camera->updateCamera();
+    camera->updateCamera(mesh);
     camera->viewMatrix = camera->getViewMatrix();
     camera->projMatrix = camera->getProjectionMatrix();
 
@@ -233,7 +251,8 @@ void MeshPainter::drawMesh(TriMesh* mesh, openGLObject& object, Light* light, Ca
 void MeshPainter::drawMesh1(TriMesh* mesh, openGLObject& object, Light* light, Camera* camera, int type,glm::mat4 mat)
 {
     // 相机矩阵计算
-    camera->updateCamera();
+    if(!camera->isfirst)
+        camera->updateCamera();
     camera->viewMatrix = camera->getViewMatrix();
     camera->projMatrix = camera->getProjectionMatrix();
 

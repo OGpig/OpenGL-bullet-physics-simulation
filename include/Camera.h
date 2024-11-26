@@ -2,7 +2,7 @@
 #define _CAMERA_H_
 
 #include "Angel.h"
-
+#include"TriMesh.h"
 class Camera
 {
 public:
@@ -27,9 +27,12 @@ public:
 
 	// 每次更改相机参数后更新一下相关的数值
 	void updateCamera();
+	void updateCamera(TriMesh *mesh);		//重载updateCamera
 	// 处理相机的键盘操作
 	void keyboard(int key, int action, int mode);
 
+	void follow_body(TriMesh* mesh,glm::mat4 mat);	//跟随身体
+	void init_eyes(TriMesh* mesh);					//眼睛初始化
 	// 模视矩阵
 	glm::mat4 viewMatrix;
 	glm::mat4 projMatrix;
@@ -55,5 +58,8 @@ public:
 	// 正交投影参数
 	float scale = 1.5;
 	bool isOrtho=false;
+
+
+	bool isfirst = false;
 };
 #endif

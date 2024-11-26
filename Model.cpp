@@ -44,10 +44,25 @@ void Model::set_ground(btRigidBody* m_ground)
 }
 
 
-void Model::create(btScalar mass, btVector3 fallInertia)
+void Model::create(btScalar mass, btVector3 fallInertia, int shapetype=0, btVector3 dimensions = btVector3(1, 1, 1))
 {
 
-    collisionShape = new btSphereShape(1);
+    switch (shapetype) {
+    case 0: // 球形
+        collisionShape = new btSphereShape(dimensions.x()); // 使用 x 作为半径
+        break;
+    case 1: // 胶囊
+        collisionShape = new btCapsuleShape(dimensions.x(), dimensions.y());
+        // x 是半径, y 是长度（不包括两端半球）
+        break;
+    case 2: // 圆柱
+        collisionShape = new btCylinderShape(dimensions);
+        // dimensions 的 x/y/z 分别是半径和高度的方向
+        break;
+    case 3: // 盒子
+        collisionShape = new btBoxShape(dimensions); // 盒子半边长
+        break;
+    }
     motionState = new btDefaultMotionState(btTransform(btQuaternion(0, rotation.y, rotation.z, 1), btVector3(translation.x, translation.y, translation.z)));
     collisionShape->calculateLocalInertia(mass, fallInertia);
     btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(mass, motionState, collisionShape,fallInertia);
@@ -65,10 +80,10 @@ void Model::update_position()
     btScalar yaw, pitch, roll; // Yaw (Z), Pitch (Y), Roll (X)
     rotation.getEulerZYX(yaw, pitch, roll);
     // 将欧拉角封装到 glm::vec3 中（需要转换为度数）
-    glm::vec3 eulerAngles(glm::degrees(roll)-90, glm::degrees(pitch), glm::degrees(yaw));
+    glm::vec3 eulerAngles(glm::degrees(roll), glm::degrees(pitch), glm::degrees(yaw));
     // 设置旋转
     setRotation(eulerAngles);
-    printf("x:%f   y:%f   z:%f\n", trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ());
+    //printf("x:%f   y:%f   z:%f\n", trans.getOrigin().getX(), trans.getOrigin().getY(), trans.getOrigin().getZ());
     //printf("x:%f   y:%f   z:%f\n", scale.x, scale.y, scale.z);
 }
 //键盘操作
