@@ -134,6 +134,8 @@ protected:
 
 class Fluid : public TriMesh {
 protected:
+	std::vector<glm::vec3> vpb; // 上一个
+	std::vector<glm::vec3> vpa; // 下一个
 	int numOfWidth;
 	float c; // 波速
 	float u; // 阻力系数
@@ -141,13 +143,12 @@ protected:
 
 	float k1, k2, k3;
 
-	std::vector<glm::vec3> vpb; // vertex position before
-	std::vector<glm::vec3> vpa; // vertex position after
+
 public:
-	float getOffset(glm::vec3 pos);
+	Fluid();
+	Fluid(float t);
 	void generateSurface(int n, glm::vec3 color, float _c, float _u, float _d);
 	void updateSurfacePosition();
-	void coefficientCount(float t);
 	// 清除数据
 	void cleanData();
 };

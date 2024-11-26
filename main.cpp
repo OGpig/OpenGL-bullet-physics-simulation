@@ -1,4 +1,6 @@
-﻿#include <btBulletDynamicsCommon.h>
+﻿
+#include<random>
+#include <btBulletDynamicsCommon.h>
 #include "Angel.h"
 #include "TriMesh.h"
 #include "Camera.h"
@@ -7,6 +9,12 @@
 #include"Model.h"
 #include <vector>
 #include <string>
+
+
+// 设置随机数生成器
+std::random_device rd;  // 随机数种子
+std::mt19937 gen(rd()); // 随机数引擎
+std::uniform_real_distribution<float> dist(-20.0f, 20.0f); // 均匀分布 [-20, 20]
 
 int WIDTH = 800;
 int HEIGHT = 800;
@@ -117,6 +125,7 @@ TriMesh* RightLowerLeg = new TriMesh();
 TriMesh* LeftUpperLeg = new TriMesh();
 TriMesh* LeftLowerLeg = new TriMesh();
 
+
 // 被选中的物体
 int Selected_mesh = robot.Torso;
 
@@ -138,7 +147,10 @@ TriMesh* skybox4 = new TriMesh();
 TriMesh* skybox5 = new TriMesh();
 TriMesh* skybox6 = new TriMesh();
 
-Fluid* water = new Fluid();    //水面
+//树木
+TriMesh* Tree[10];
+
+Fluid* water = new Fluid(0.1f);    //水面
 float Scale = 10.0f;
 
 Ground* ground = new Ground(); //地面
@@ -323,27 +335,29 @@ void init()
     ground->create();
     dynamicsWorld->addRigidBody(ground->rigidBody);
 
-    painter->addMesh(ground, "mesh_ground", "./assets/grass.jpg", vshader, fshader, 1, glm::mat4(1.0f));
+    painter->addMesh(ground, "mesh_ground", "./assets/mountain/ground.jpg", vshader, fshader, 1, glm::mat4(1.0f));
     meshList.push_back(ground);
 
 
     cube->generateCube();
+    settexure(cube, mat_ambient, mat_diffuse, mat_specular, shine);
     cube->setTranslation(glm::vec3(4.0f, 10.0f, 4.0f));
     cube->setRotation(glm::vec3(-90, 0, 0));
     cube->setScale(glm::vec3(4, 4, 4));
     cube->create(1.0f, btVector3(0, 0, 0), 0, btVector3(1, 1, 1));
     dynamicsWorld->addRigidBody(cube->rigidBody);
-    painter->addMesh(cube, "cube", "./assets/grass.jpg", vshader, fshader, 1, glm::mat4(1.0f));
+    painter->addMesh(cube, "cube", "./assets/grass.jpg", vshader, fshader, 3, glm::mat4(1.0f));
     meshList.push_back(cube);
     cube->set_ground(ground->rigidBody);
 
     cube2->generateCube();
+    settexure(cube2, mat_ambient, mat_diffuse, mat_specular, shine);
     cube2->setTranslation(glm::vec3(0.0f, 1.0f, 6.0f));
     cube2->setRotation(glm::vec3(-90, 0, 0.0f));
     cube2->setScale(glm::vec3(4, 4, 4));
     cube2->create(0.0f, btVector3(0, 0, 0), 0, btVector3(1, 1, 1));
     dynamicsWorld->addRigidBody(cube2->rigidBody);
-    painter->addMesh(cube2, "cube2", "./assets/cube/wall.jpg", vshader, fshader, 1, glm::mat4(1.0f));
+    painter->addMesh(cube2, "cube2", "./assets/cube/wall.jpg", vshader, fshader, 3, glm::mat4(1.0f));
     meshList.push_back(cube2);
 
     // 水面
@@ -352,7 +366,6 @@ void init()
     water->setSpecular(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)); // 镜面反射
     water->setShininess(100.0f); //高光系数
     water->generateSurface(30, glm::vec3(0.0, 0.0, 0.0), 0.03f, 0.0f, 0.05f);
-    water->coefficientCount(0.1f);
     water->setTranslation(glm::vec3(1, 0.35, -2));
     water->setRotation(glm::vec3(0, 0, 0));
     water->setScale(glm::vec3(3.0, 1.0, 3.0));
@@ -360,7 +373,24 @@ void init()
     painter->addMesh(water, "mesh_water", "./assets/water.jpg", vshader, fshader, 3, glm::mat4(1.0f));
     meshList.push_back(water);
 
-
+    //创建树
+    for (int i = 0; i < 10; i++)
+    {
+        Tree[i] = new TriMesh();
+        settexure(Tree[i], mat_ambient, mat_diffuse, mat_specular, shine);
+        Tree[i]->readObj("./assets/tree/1.obj");
+        // 设置随机位置
+        float randomX = dist(gen);
+        float randomZ = dist(gen);
+        Tree[i]->setTranslation(glm::vec3(randomX, 4.0f, randomZ));
+        Tree[i]->setRotation(glm::vec3(0, 0, 0.0f));
+        Tree[i]->setScale(glm::vec3(10, 10, 10));
+        // 动态生成名字
+        std::ostringstream treeName;
+        treeName << "Tree_" << i; // 例如：Tree_0, Tree_1, ...
+        painter->addMesh(Tree[i], treeName.str(), "./assets/tree/tree.png", vshader, fshader, 3, glm::mat4(1.0f));
+        meshList.push_back(Tree[i]);
+    }
     //天空盒
     skybox1->generateSquare(glm::vec3(0.0, 0.0, 0.0));
 
@@ -368,7 +398,7 @@ void init()
     skybox1->setRotation(glm::vec3(0.0, 0.0, 0.0));
     skybox1->setScale(glm::vec3(waterScale * sqrt(2.0), waterScale * sqrt(2.0), waterScale * sqrt(2.0)));
 
-    painter->addMesh(skybox1, "skybox1", "./assets/_skybox_6.jpg", vshader, fshader, 1, glm::mat4(1.0f));
+    painter->addMesh(skybox1, "skybox1", "./assets/skybox6.jpg", vshader, fshader, 1, glm::mat4(1.0f));
     meshList.push_back(skybox1);
 
     skybox2->generateSquare(glm::vec3(0.0, 0.0, 0.0));
@@ -377,7 +407,7 @@ void init()
     skybox2->setRotation(glm::vec3(0.0, 180.0, 0.0));
     skybox2->setScale(glm::vec3(waterScale * sqrt(2.0), waterScale * sqrt(2.0), waterScale * sqrt(2.0)));
 
-    painter->addMesh(skybox2, "skybox2", "./assets/_skybox_8.jpg", vshader, fshader, 1, glm::mat4(1.0f));
+    painter->addMesh(skybox2, "skybox2", "./assets/skybox8.jpg", vshader, fshader, 1, glm::mat4(1.0f));
     meshList.push_back(skybox2);
 
     skybox3->generateSquare(glm::vec3(0.0, 0.0, 0.0));
@@ -386,7 +416,7 @@ void init()
     skybox3->setRotation(glm::vec3(0.0, 90.0, 0.0));
     skybox3->setScale(glm::vec3(waterScale * sqrt(2.0), waterScale * sqrt(2.0), waterScale * sqrt(2.0)));
 
-    painter->addMesh(skybox3, "skybox3", "./assets/_skybox_5.jpg", vshader, fshader, 1, glm::mat4(1.0f));
+    painter->addMesh(skybox3, "skybox3", "./assets/skybox5.jpg", vshader, fshader, 1, glm::mat4(1.0f));
     meshList.push_back(skybox3);
 
     skybox4->generateSquare(glm::vec3(0.0, 0.0, 0.0));
@@ -395,7 +425,7 @@ void init()
     skybox4->setRotation(glm::vec3(0.0, -90.0, 0.0));
     skybox4->setScale(glm::vec3(waterScale * sqrt(2.0), waterScale * sqrt(2.0), waterScale * sqrt(2.0)));
 
-    painter->addMesh(skybox4, "skybox4", "./assets/_skybox_7.jpg", vshader, fshader, 1, glm::mat4(1.0f));
+    painter->addMesh(skybox4, "skybox4", "./assets/skybox7.jpg", vshader, fshader, 1, glm::mat4(1.0f));
     meshList.push_back(skybox4);
 
     skybox5->generateSquare(glm::vec3(0.0, 0.0, 0.0));
@@ -404,7 +434,7 @@ void init()
     skybox5->setRotation(glm::vec3(90.0, 0.0, 0.0));
     skybox5->setScale(glm::vec3(waterScale * sqrt(2.0), waterScale * sqrt(2.0), waterScale * sqrt(2.0)));
 
-    painter->addMesh(skybox5, "skybox5", "./assets/_skybox_2.jpg", vshader, fshader, 1, glm::mat4(1.0f));
+    painter->addMesh(skybox5, "skybox5", "./assets/skybox2.jpg", vshader, fshader, 1, glm::mat4(1.0f));
     meshList.push_back(skybox5);
 
     skybox6->generateSquare(glm::vec3(0.0, 0.0, 0.0));
@@ -413,7 +443,7 @@ void init()
     skybox6->setRotation(glm::vec3(-90.0, 0.0, 0.0));
     skybox6->setScale(glm::vec3(waterScale * sqrt(2.0), waterScale * sqrt(2.0), waterScale * sqrt(2.0)));
 
-    painter->addMesh(skybox6, "skybox6", "./assets/_skybox_10.jpg", vshader, fshader, 1, glm::mat4(1.0f));
+    painter->addMesh(skybox6, "skybox6", "./assets/skybox10.jpg", vshader, fshader, 1, glm::mat4(1.0f));
     meshList.push_back(skybox6);
     glClearColor(1.0, 1.0, 1.0, 1.0);
     // glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -554,7 +584,10 @@ void printHelp()
         "  s:		Decrease the camera radius" << std::endl <<
         " up:		move steve front" << std::endl <<
         "down:	   move steve back" << std::endl <<
-        "  r:		reset steve" << std::endl <<
+        "  q:		rotate cube" << std::endl <<
+        "  e:		rotate cube" << std::endl <<
+        "  w:		go cube" << std::endl <<
+        "  d:		back cube" << std::endl <<
         "space:	   reset other" << std::endl << 
         "z  :	    change perspective" << std::endl << std::endl;
 
@@ -586,13 +619,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             //切换天空盒
         case GLFW_KEY_V:fix_backgroud(); break;
             //steve前进
-        case GLFW_KEY_UP:    printf("eye.x:%lf   eye.y:%lf   eye.z:%lf\n", camera1->eye.x, camera1->eye.y, camera1->eye.z);
-            printf("at.x:%lf   at.y:%lf   at.z:%lf\n", camera1->at.x, camera1->at.y, camera1->at.z); pos_vec += glm::vec3(1.0f * sin(robot.theta[robot.Torso] / 180 * M_PI), 0.0f, 1.0f * cos(robot.theta[robot.Torso] / 180 * M_PI)); break;
+        case GLFW_KEY_UP:pos_vec += glm::vec3(1.0f * sin(robot.theta[robot.Torso] / 180 * M_PI), 0.0f, 1.0f * cos(robot.theta[robot.Torso] / 180 * M_PI)); break;
             //steve后退
-        case GLFW_KEY_DOWN:    printf("eye.x:%lf   eye.y:%lf   eye.z:%lf\n", camera1->eye.x, camera1->eye.y, camera1->eye.z);
-            printf("at.x:%lf   at.y:%lf   at.z:%lf\n", camera1->at.x, camera1->at.y, camera1->at.z); pos_vec -= glm::vec3(1.0f * sin(robot.theta[robot.Torso] / 180 * M_PI), 0.0f, 1.0f * cos(robot.theta[robot.Torso] / 180 * M_PI)); break;
+        case GLFW_KEY_DOWN: pos_vec -= glm::vec3(1.0f * sin(robot.theta[robot.Torso] / 180 * M_PI), 0.0f, 1.0f * cos(robot.theta[robot.Torso] / 180 * M_PI)); break;
         case GLFW_KEY_R:robot.resetTheta(); pos_vec = glm::vec3(0.0, 0.30 * robot.TORSO_HEIGHT, 0.0); pause_tag = 1; break;//动作清零
-        case GLFW_KEY_Q:move_steve(); pause_tag = 1; break;
+        //case GLFW_KEY_Q:move_steve(); pause_tag = 1; break;
         case GLFW_KEY_H: printHelp(); break;
         case GLFW_KEY_Z: camera_tag = 1 - camera_tag; break;
         case GLFW_KEY_1:Selected_mesh = robot.Torso; break;
@@ -620,6 +651,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         default:
             camera->keyboard(key, action, mode);
             light->keyboard(key, action, mode);
+            cube->key_callback(dynamicsWorld, key, action, mode);
             break;
         }
     }
@@ -701,7 +733,7 @@ int main(int argc, char** argv)
         t++;
         dynamicsWorld->stepSimulation(1.f / 60.f, 10);
         cube->update_position();
-        painter->replaceMesh(cube, "cube", "./assets/grass.jpg", vshader, fshader, 1, glm::mat4(1.0f));
+        painter->replaceMesh(cube, "cube", "./assets/grass.jpg", vshader, fshader, 3, glm::mat4(1.0f));
         //dynamicsWorld->updateSingleAabb(cube->rigidBody);
         display();
         //reshape();

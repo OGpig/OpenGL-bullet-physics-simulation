@@ -835,31 +835,22 @@ void Fluid::updateSurfacePosition()
 		points[j++] = vertex_positions[faces[i].z];
 	}
 }
-
-void Fluid::coefficientCount(float t)
+Fluid::Fluid()
 {
+	c = 0.03f;
+	u = 0.0f;
+	d = 0.05f;
+}
+Fluid::Fluid(float t)
+{
+	c = 0.03f;
+	u = 0.0f;
+	d = 0.05f;
 	float f1 = c * c * t * t / d / d;
 	float f2 = 1.0f / (u * t + 2);
 	k1 = (4 - 8 * f1) * f2;
 	k2 = (u * t - 2) * f2;
 	k3 = 2 * f1 * f2;
-}
-
-float Fluid::getOffset(glm::vec3 pos)
-{
-	float x = pos.x;
-	float z = pos.z;
-	int i = (x + 0.5) * (numOfWidth + 1.0);
-	int j = (z + 0.5) * (numOfWidth + 1.0);
-	if (i < numOfWidth + 1 && j < numOfWidth + 1 && i >= 0 && j >= 0)
-	{
-		float ay = vertex_positions[i * (numOfWidth + 1) + j].y;
-		float by = vertex_positions[i * (numOfWidth + 1) + j + 1].y;
-		float cy = vertex_positions[(i + 1) * (numOfWidth + 1) + j].y;
-		float dy = vertex_positions[(i + 1) * (numOfWidth + 1) + j + 1].y;
-		return (ay + by + cy + dy) / 4;
-	}
-	return 0.0f;
 }
 
 void Fluid::cleanData()

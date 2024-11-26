@@ -94,7 +94,7 @@ void Model::key_callback(btDiscreteDynamicsWorld* dynamicsWorld, int key, int ac
         case GLFW_KEY_W: // ÏòÇ°
             moveModel(dynamicsWorld, 0, 0, -1);
             break;
-        case GLFW_KEY_S:
+        case GLFW_KEY_D:
             moveModel(dynamicsWorld, 0, 0, 1);
             break;
         // Ðý×ª
